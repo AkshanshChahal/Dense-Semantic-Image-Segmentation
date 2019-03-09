@@ -1,4 +1,6 @@
 import time
+import os
+import datetime
 
 from models.segnet import DenseSegNet
 from augmentations import get_composed_augmentations
@@ -11,6 +13,14 @@ from torch.utils import data
 import torchvision.models as models
 from torch.optim import SGD
 
+#constants
+data_path = "/datasets/cityscapes"
+image_size = (256, 512)
+batch_size = 8
+model_name = "Default_SegNet"
+save_every_n_steps = 50
+
+
 # Setup device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -21,9 +31,6 @@ data_aug = get_composed_augmentations(augmentations)
 
 # Setup Dataloader
 data_loader = CityscapesLoader
-data_path = "/datasets/cityscapes"
-image_size = (256, 512)
-batch_size = 8
 
 t_loader = data_loader(
     data_path,
@@ -56,9 +63,13 @@ valloader = data.DataLoader(
 
 
 # Setup Model
-model = DenseSegNet(num_classes=n_classes)
-vgg16 = models.vgg16(pretrained=True)
-model.init_vgg16_params(vgg16)
+if model_name == "Default_SegNet":
+    model = DenseSegNet(num_classes=n_classes)
+    vgg16 = models.vgg16(pretrained=True)
+    model.init_vgg16_params(vgg16)
+else:
+    print("Unknown model name!!!!!!!!")
+    
 model = model.to(device)
 
 # Loss function
@@ -109,7 +120,7 @@ while epoch <= num_epochs:
         # torch.Size([2, 3, 512, 1024]) torch.Size([2, 512, 1024])
         print(step)
         
-        if step%50 == 0:
+        if step%save_every_n_steps == 0:
             model.eval()
             with torch.no_grad():
                 for i_val, (images_val, labels_val) in enumerate(valloader):
@@ -142,3 +153,16 @@ while epoch <= num_epochs:
         #         logger.info("{}: {}".format(k, v))
         #         writer.add_scalar("val_metrics/cls_{}".format(k), v, i + 1)
             running_metrics_val.reset()
+            
+            
+            if not os.path.exists("saved_models"):
+                os.makedirs("saved_models") 
+                
+            folder = 'saved_models/' + model_name
+            
+            if not os.path.exists(folder):
+                os.makedirs(folder) 
+            
+            torch.save(model.state_dict(), os.path.join(folder, 'net_epoch_{}_steps_{}_loss_{}_{}.t7'.format(epoch, step, "<IDK what to add here>", datetime.datetime.now().strftime("%b_%d_%H:%M:%S"))))
+            
+            
