@@ -14,11 +14,17 @@ import torchvision.models as models
 from torch.optim import SGD
 
 #constants
+start_step = 600
+start_epoch = 2
+load_model_file = "net_epoch_" + str(start_epoch) + "_steps_" + str(start_step) + "_loss_<IDK what to add here>_Mar_09_13:13:40.t7"
+
 data_path = "/datasets/cityscapes"
 image_size = (256, 512)
 batch_size = 8
 model_name = "Default_SegNet"
 save_every_n_steps = 50
+use_n_batches_for_val_loss = 25
+
 
 
 # Setup device
@@ -70,6 +76,12 @@ if model_name == "Default_SegNet":
 else:
     print("Unknown model name!!!!!!!!")
     
+if load_model_file is not None:
+    print("Loading specified model params")
+    print("Set file name cosntant to None if you do not want to load model")
+    folder = 'saved_models/' + model_name + "/"
+    model.load_state_dict(torch.load(folder + load_model_file))
+    
 model = model.to(device)
 
 # Loss function
@@ -98,6 +110,10 @@ val_loss_meter = averageMeter()
 num_epochs = 10
 step = 0
 epoch = 0
+if load_model_file is not None:
+    step = start_step
+    epoch = start_epoch
+
 while epoch <= num_epochs:
     epoch += 1
     print("Starting epoch %s" % epoch)
@@ -136,7 +152,7 @@ while epoch <= num_epochs:
                     running_metrics_val.update(gt, pred)
                     val_loss_meter.update(val_loss.item())
                     print("val step done")
-                    if(i_val%10==0):
+                    if(i_val%use_n_batches_for_val_loss==0):
                         break
 
             print("Iter %d Loss: %.4f" % (step, val_loss_meter.avg))
