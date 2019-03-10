@@ -3,6 +3,7 @@ import os
 import datetime
 
 from models.segnet import DenseSegNet
+from models.segwithskipnet import DenseSegWithSkipNet
 from augmentations import get_composed_augmentations
 from loader.cityscapes import CityscapesLoader
 from metrics import runningScore, averageMeter
@@ -73,6 +74,10 @@ if model_name == "Default_SegNet":
     model = DenseSegNet(num_classes=n_classes)
     vgg16 = models.vgg16(pretrained=True)
     model.init_vgg16_params(vgg16)
+elif model_name == "SegWithSkipNet":
+    model = DenseSegWithSkipNet(num_classes=n_classes)
+    vgg16 = models.vgg16(pretrained=True)
+    model.init_vgg16_params(vgg16)    
 else:
     print("Unknown model name!!!!!!!!")
     
