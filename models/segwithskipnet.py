@@ -35,7 +35,7 @@ class segnetDown3(nn.Module):
 # Used in the last Decoder when skip connection is not needed
 class segnetUp1(nn.Module):
 	def __init__(self, in_size, out_size):
-		super(segnetUp2, self).__init__()
+		super(segnetUp1, self).__init__()
 		self.unpool = nn.MaxUnpool2d(2, 2)
 		self.conv1 = conv2DBatchNormRelu(in_size, in_size, 3, 1, 1)
 		self.conv2 = conv2DBatchNormRelu(in_size, out_size, 3, 1, 1)
@@ -50,7 +50,7 @@ class segnetUp2(nn.Module):
 	def __init__(self, in_size, out_size):
 		super(segnetUp2, self).__init__()
 		self.unpool = nn.MaxUnpool2d(2, 2)
-		self.conv1 = conv2DBatchNormRelu(in_size, in_size, 3, 1, 1)
+		self.conv1 = conv2DBatchNormRelu(in_size*2, in_size, 3, 1, 1)
 		self.conv2 = conv2DBatchNormRelu(in_size, out_size, 3, 1, 1)
 
 	def forward(self, inputs, indices, output_shape, skip_con):
@@ -65,7 +65,7 @@ class segnetUp3(nn.Module):
 	def __init__(self, in_size, out_size):
 		super(segnetUp3, self).__init__()
 		self.unpool = nn.MaxUnpool2d(2, 2)
-		self.conv1 = conv2DBatchNormRelu(in_size, in_size, 3, 1, 1)
+		self.conv1 = conv2DBatchNormRelu(in_size*2, in_size, 3, 1, 1)
 		self.conv2 = conv2DBatchNormRelu(in_size, in_size, 3, 1, 1)
 		self.conv3 = conv2DBatchNormRelu(in_size, out_size, 3, 1, 1)
 
