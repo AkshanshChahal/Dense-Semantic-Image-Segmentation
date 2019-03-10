@@ -1,6 +1,7 @@
 import time
 import os
 import datetime
+import pickle
 
 from models.segnet import DenseSegNet
 from augmentations import get_composed_augmentations
@@ -16,7 +17,8 @@ from torch.optim import SGD
 #constants
 start_step = 600
 start_epoch = 2
-load_model_file = "net_epoch_" + str(start_epoch) + "_steps_" + str(start_step) + "_loss_<IDK what to add here>_Mar_09_13:13:40.t7"
+#load_model_file = "net_epoch_" + str(start_epoch) + "_steps_" + str(start_step) + "_loss_<IDK what to add here>_Mar_09_13:13:40.t7"
+load_model_file = None
 
 data_path = "/datasets/cityscapes"
 image_size = (256, 512)
@@ -114,6 +116,7 @@ if load_model_file is not None:
     step = start_step
     epoch = start_epoch
 
+score_list = []
 while epoch <= num_epochs:
     epoch += 1
     print("Starting epoch %s" % epoch)
@@ -156,8 +159,8 @@ while epoch <= num_epochs:
                         break
 
             print("Iter %d Loss: %.4f" % (step, val_loss_meter.avg))
-            val_loss_meter.reset()
-
+            
+            
             score, class_iou = running_metrics_val.get_scores()
             for k, v in score.items():
                 print("kv: ", k, v)
@@ -168,13 +171,19 @@ while epoch <= num_epochs:
                 print("ikv: ", k, v)
         #         logger.info("{}: {}".format(k, v))
         #         writer.add_scalar("val_metrics/cls_{}".format(k), v, i + 1)
+            score_list.append([epoch, step, val_loss_meter.avg, score, class_iou])
+            folder = 'saved_models/' + model_name
+            
+            with open(os.path.join(folder, 'losses_epoch_{}_steps_{}_{}.pkl'.format(epoch, step, datetime.datetime.now().strftime("%b_%d_%H:%M:%S"))), 'wb') as handle:
+                pickle.dump(score_list, handle)
             running_metrics_val.reset()
+            val_loss_meter.reset()
             
             
             if not os.path.exists("saved_models"):
                 os.makedirs("saved_models") 
                 
-            folder = 'saved_models/' + model_name
+            
             
             if not os.path.exists(folder):
                 os.makedirs(folder) 
