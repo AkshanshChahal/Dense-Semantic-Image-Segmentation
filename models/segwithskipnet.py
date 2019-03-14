@@ -50,7 +50,7 @@ class segnetUp2(nn.Module):
 	def __init__(self, in_size, out_size):
 		super(segnetUp2, self).__init__()
 		self.unpool = nn.MaxUnpool2d(2, 2)
-		self.conv1 = conv2DBatchNormRelu(in_size*2, in_size, 3, 1, 1)
+		self.conv1 = conv2DBatchNormRelu(in_size*1.5, in_size, 3, 1, 1)
 		self.conv2 = conv2DBatchNormRelu(in_size, out_size, 3, 1, 1)
 
 	def forward(self, inputs, indices, output_shape, skip_con):
@@ -65,7 +65,13 @@ class segnetUp3(nn.Module):
 	def __init__(self, in_size, out_size):
 		super(segnetUp3, self).__init__()
 		self.unpool = nn.MaxUnpool2d(2, 2)
-		self.conv1 = conv2DBatchNormRelu(in_size*2, in_size, 3, 1, 1)
+# 		if out_size == 256:
+# 			self.conv1 = conv2DBatchNormRelu(768, in_size, 3, 1, 1)
+# 		else:
+# 		if out_size ==512:
+# 			self.conv1 = conv2DBatchNormRelu(in_size*2, in_size, 3, 1, 1)           
+# 		else:
+		self.conv1 = conv2DBatchNormRelu(in_size + out_size, in_size, 3, 1, 1)
 		self.conv2 = conv2DBatchNormRelu(in_size, in_size, 3, 1, 1)
 		self.conv3 = conv2DBatchNormRelu(in_size, out_size, 3, 1, 1)
 

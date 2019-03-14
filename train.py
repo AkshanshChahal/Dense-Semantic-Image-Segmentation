@@ -16,17 +16,17 @@ import torchvision.models as models
 from torch.optim import SGD
 
 #constants
-start_step = 600
-start_epoch = 2
-#load_model_file = "net_epoch_" + str(start_epoch) + "_steps_" + str(start_step) + "_loss_<IDK what to add here>_Mar_09_13:13:40.t7"
-load_model_file = None
+start_step = 4050
+start_epoch = 11
+load_model_file = "net_epoch_11_steps_4050_loss_<IDK what to add here>_Mar_09_22:50:27.t7"
+# load_model_file = None
 
 data_path = "/datasets/cityscapes"
 image_size = (256, 512)
 batch_size = 8
-model_name = "Default_SegNet"
+model_name = "SegWithSkipNet"
 save_every_n_steps = 50
-use_n_batches_for_val_loss = 25
+use_n_batches_for_val_loss = 62
 
 
 
@@ -114,7 +114,7 @@ optimizer = SGD(model.parameters(), lr = 0.01)
 running_metrics_val = runningScore(n_classes)
 val_loss_meter = averageMeter()
 
-num_epochs = 10
+num_epochs = 30
 step = 0
 epoch = 0
 if load_model_file is not None:
@@ -142,7 +142,8 @@ while epoch <= num_epochs:
         
         # print(images.shape, labels.shape)
         # torch.Size([2, 3, 512, 1024]) torch.Size([2, 512, 1024])
-        print(step)
+        if step%50 == 0:
+            print(step)
         
         if step%save_every_n_steps == 0:
             model.eval()
