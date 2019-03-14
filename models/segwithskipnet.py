@@ -185,10 +185,10 @@ class DenseSegWithSkipNet(nn.Module):
 		down4, indices_4, unpool_shape4 = self.down4(down3)
 		down5, indices_5, unpool_shape5 = self.down5(down4)
 		print ("down5:", down5.shape)
-        p = self.psp(down5)
-        print ("p:", p.shape)
+		p = self.psp(down5)
+		print ("p:", p.shape)
 
-        up5 = self.up5(p, indices_5, unpool_shape5, down4)
+		up5 = self.up5(p, indices_5, unpool_shape5, down4)
 		#up5 = self.up5(down5, indices_5, unpool_shape5, down4)
 		up4 = self.up4(up5, indices_4, unpool_shape4, down3)
 		up3 = self.up3(up4, indices_3, unpool_shape3, down2)
