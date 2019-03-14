@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 class PSPModule(nn.Module):
     def __init__(self, features, out_features=1024, sizes=(1, 2, 3, 6)):
@@ -184,9 +185,7 @@ class DenseSegWithSkipNet(nn.Module):
 		down3, indices_3, unpool_shape3 = self.down3(down2)
 		down4, indices_4, unpool_shape4 = self.down4(down3)
 		down5, indices_5, unpool_shape5 = self.down5(down4)
-		print ("down5:", down5.shape)
 		p = self.psp(down5)
-		print ("p:", p.shape)
 
 		up5 = self.up5(p, indices_5, unpool_shape5, down4)
 		#up5 = self.up5(down5, indices_5, unpool_shape5, down4)

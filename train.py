@@ -19,7 +19,7 @@ from torch.optim import SGD
 start_step = 4050
 start_epoch = 11
 #load_model_file = "net_epoch_11_steps_4050_loss_<IDK what to add here>_Mar_09_22:50:27.t7"
-# load_model_file = None
+load_model_file = None
 
 data_path = "/datasets/cityscapes"
 image_size = (256, 512)
