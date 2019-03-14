@@ -14,17 +14,18 @@ import torchvision.models as models
 from torch.optim import SGD
 
 #constants
-start_step = 600
-start_epoch = 2
-load_model_file = "net_epoch_" + str(start_epoch) + "_steps_" + str(start_step) + "_loss_<IDK what to add here>_Mar_09_13:13:40.t7"
+start_step = 3900
+start_epoch = 11
+load_model_file = "net_epoch_11_steps_3900_loss_<IDK what to add here>_Mar_09_14:43:46.t7"
 
 data_path = "/datasets/cityscapes"
 image_size = (256, 512)
 batch_size = 8
 model_name = "Default_SegNet"
-save_every_n_steps = 50
-use_n_batches_for_val_loss = 25
+save_every_n_steps = 200
+use_n_batches_for_val_loss = 60
 
+num_epochs = 30
 
 
 # Setup device
@@ -61,13 +62,12 @@ trainloader = data.DataLoader(
     num_workers=1,
     shuffle=True,
 )
-n_classes=20
 
 valloader = data.DataLoader(
     v_loader, batch_size=batch_size, num_workers=1
 )
 
-
+n_classes = 20
 # Setup Model
 if model_name == "Default_SegNet":
     model = DenseSegNet(num_classes=n_classes)
@@ -101,13 +101,12 @@ def cross_entropy2d(input, target, weight=None, size_average=True):
     return loss
 
 # optimier
-optimizer = SGD(model.parameters(), lr = 0.01)
+optimizer = SGD(model.parameters(), lr = 0.1, momentum=0.9)
 
 # Setup Metrics
 running_metrics_val = runningScore(n_classes)
 val_loss_meter = averageMeter()
 
-num_epochs = 10
 step = 0
 epoch = 0
 if load_model_file is not None:
@@ -134,7 +133,8 @@ while epoch <= num_epochs:
         
         # print(images.shape, labels.shape)
         # torch.Size([2, 3, 512, 1024]) torch.Size([2, 512, 1024])
-        print(step)
+        if step%5==0:
+            print(step)
         
         if step%save_every_n_steps == 0:
             model.eval()
