@@ -20,11 +20,13 @@ from torch.optim import SGD
 #constants
 start_step = 3750
 start_epoch = 11
-load_model_file = "net_epoch_11_steps_3750_loss_<IDK what to add here>_Mar_14_05:27:23.t7"
+#load_model_file = "net_epoch_11_steps_4050_loss_<IDK what to add here>_Mar_09_22:50:27.t7"
+load_model_file = None
 
 data_path = "/datasets/cityscapes"
 image_size = (256, 512)
 batch_size = 8
+
 # model_name = "Default_SegNet"
 model_name = "SegNet_Dilation"
 # model_name = "SegNet_All_Dilation"
@@ -193,7 +195,7 @@ while epoch <= num_epochs:
         #         logger.info("{}: {}".format(k, v))
         #         writer.add_scalar("val_metrics/cls_{}".format(k), v, i + 1)
             score_list.append([epoch, step, val_loss_meter.avg, score, class_iou])
-            folder = 'saved_models/' + model_name
+            folder = 'saved_models/' + model_name +'psp'
             
             
             if not os.path.exists("saved_models"):
@@ -208,6 +210,12 @@ while epoch <= num_epochs:
                 pickle.dump(score_list, handle)
             running_metrics_val.reset()
             val_loss_meter.reset()
+            
+            with open(os.path.join(folder, 'losses_epoch_{}_steps_{}_{}.pkl'.format(epoch, step, datetime.datetime.now().strftime("%b_%d_%H:%M:%S"))), 'wb') as handle:
+                pickle.dump(score_list, handle)
+            running_metrics_val.reset()
+            val_loss_meter.reset()
+            
             
             torch.save(model.state_dict(), os.path.join(folder, 'net_epoch_{}_steps_{}_loss_{}_{}.t7'.format(epoch, step, "<IDK what to add here>", datetime.datetime.now().strftime("%b_%d_%H:%M:%S"))))
             

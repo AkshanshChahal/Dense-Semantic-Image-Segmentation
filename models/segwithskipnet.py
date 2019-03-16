@@ -1,5 +1,41 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
+
+class PSPModule(nn.Module):
+    def __init__(self, features, out_features=1024, sizes=(1, 2, 3, 6)):
+        super().__init__()
+        self.stages = []
+        self.stages = nn.ModuleList([self._make_stage(features, size) for size in sizes])
+        self.bottleneck = nn.Conv2d(features * (len(sizes)//4 + 1), out_features, kernel_size=1)
+        self.relu = nn.ReLU()
+
+    def _make_stage(self, features, size):
+        prior = nn.AdaptiveAvgPool2d(output_size=(size, size))
+        conv = nn.Conv2d(features, features//4, kernel_size=1, bias=False)
+        return nn.Sequential(prior, conv)
+
+    def forward(self, feats):
+        h, w = feats.size(2), feats.size(3)
+        priors = [F.upsample(input=stage(feats), size=(h, w), mode='bilinear') for stage in self.stages] + [feats]
+        bottle = self.bottleneck(torch.cat(priors, 1))
+        return self.relu(bottle)
+
+
+# class PSPUpsample(nn.Module):
+#     def __init__(self, in_channels, out_channels):
+#         super().__init__()
+#         self.conv = nn.Sequential(
+#             nn.Conv2d(in_channels, out_channels, 3, padding=1),
+#             nn.BatchNorm2d(out_channels),
+#             nn.PReLU()
+#         )
+
+#     def forward(self, x):
+#         h, w = 2 * x.size(2), 2 * x.size(3)
+#         p = F.upsample(input=x, size=(h, w), mode='bilinear')
+#         return self.conv(p)
+
 
 class segnetDown2(nn.Module):
 	def __init__(self, in_size, out_size):
@@ -118,9 +154,10 @@ class conv2DBatchNormRelu(nn.Module):
         outputs = self.cbr_unit(inputs)
         return outputs
 		
+
 class DenseSegWithSkipNet(nn.Module):
 
-	def __init__(self, num_classes=15, img_channels=3):
+	def __init__(self, num_classes=15, img_channels=3, sizes=(1, 2, 3, 6), psp_size=512):
 		super(DenseSegWithSkipNet, self).__init__()
 		# self.computing_device = computing_device 
 		self.num_classes = num_classes
@@ -131,6 +168,9 @@ class DenseSegWithSkipNet(nn.Module):
 		self.down3 = segnetDown3(128, 256)
 		self.down4 = segnetDown3(256, 512)
 		self.down5 = segnetDown3(512, 512)
+
+		self.psp = PSPModule(psp_size, 512, sizes)
+
 
 		self.up5 = segnetUp3(512, 512)
 		self.up4 = segnetUp3(512, 256)
@@ -145,8 +185,10 @@ class DenseSegWithSkipNet(nn.Module):
 		down3, indices_3, unpool_shape3 = self.down3(down2)
 		down4, indices_4, unpool_shape4 = self.down4(down3)
 		down5, indices_5, unpool_shape5 = self.down5(down4)
+		p = self.psp(down5)
 
-		up5 = self.up5(down5, indices_5, unpool_shape5, down4)
+		up5 = self.up5(p, indices_5, unpool_shape5, down4)
+		#up5 = self.up5(down5, indices_5, unpool_shape5, down4)
 		up4 = self.up4(up5, indices_4, unpool_shape4, down3)
 		up3 = self.up3(up4, indices_3, unpool_shape3, down2)
 		up2 = self.up2(up3, indices_2, unpool_shape2, down1)
