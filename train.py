@@ -5,6 +5,7 @@ import pickle
 
 from models.segnet import DenseSegNet
 from models.segwithskipnet import DenseSegWithSkipNet
+from models.segwithskip_pspnet import DenseSegWithSkipPSPNet
 from augmentations import get_composed_augmentations
 from loader.cityscapes import CityscapesLoader
 from metrics import runningScore, averageMeter
@@ -80,6 +81,10 @@ elif model_name == "SegWithSkipNet":
     model = DenseSegWithSkipNet(num_classes=n_classes)
     vgg16 = models.vgg16(pretrained=True)
     model.init_vgg16_params(vgg16)    
+elif model_name == "SegWithSkipPSPNet":
+    model = DenseSegWithSkipNet(num_classes=n_classes)
+    vgg16 = models.vgg16(pretrained=True)
+    model.init_vgg16_params(vgg16) 
 else:
     print("Unknown model name!!!!!!!!")
     
