@@ -6,6 +6,8 @@ import pickle
 from models.segnet import DenseSegNet
 from models.segwithskipnet import DenseSegWithSkipNet
 from models.segwithskip_pspnet import DenseSegWithSkipPSPNet
+from models.segnet_dilated import DenseSegNetDilation
+from models.segnet_all_dilated import DenseSegNetAllDilation
 from augmentations import get_composed_augmentations
 from loader.cityscapes import CityscapesLoader
 from metrics import runningScore, averageMeter
@@ -17,7 +19,7 @@ import torchvision.models as models
 from torch.optim import SGD
 
 #constants
-start_step = 4050
+start_step = 3750
 start_epoch = 11
 #load_model_file = "net_epoch_11_steps_4050_loss_<IDK what to add here>_Mar_09_22:50:27.t7"
 load_model_file = None
@@ -25,10 +27,15 @@ load_model_file = None
 data_path = "/datasets/cityscapes"
 image_size = (256, 512)
 batch_size = 8
-model_name = "SegWithSkipNet"
-save_every_n_steps = 20
-use_n_batches_for_val_loss = 62
 
+# model_name = "Default_SegNet"
+model_name = "SegWithSkipPSPNet"
+# model_name = "SegNet_All_Dilation"
+save_every_n_steps = 50
+use_n_batches_for_val_loss = 60
+# model_name = "SegWithSkipNet"
+
+num_epochs = 30
 
 
 # Setup device
@@ -65,13 +72,12 @@ trainloader = data.DataLoader(
     num_workers=1,
     shuffle=True,
 )
-n_classes=20
 
 valloader = data.DataLoader(
     v_loader, batch_size=batch_size, num_workers=1
 )
 
-
+n_classes = 20
 # Setup Model
 if model_name == "Default_SegNet":
     model = DenseSegNet(num_classes=n_classes)
@@ -85,6 +91,16 @@ elif model_name == "SegWithSkipPSPNet":
     model = DenseSegWithSkipNet(num_classes=n_classes)
     vgg16 = models.vgg16(pretrained=True)
     model.init_vgg16_params(vgg16) 
+elif model_name == "SegNet_Dilation":
+    print("using some dilated conv segnet")
+    model = DenseSegNetDilation(num_classes=n_classes)
+    vgg16 = models.vgg16(pretrained=True)
+    model.init_vgg16_params(vgg16) 
+elif model_name == "SegNet_All_Dilation":
+    print("using all dilated conv segnet")
+    model = DenseSegNetAllDilation(num_classes=n_classes)
+    vgg16 = models.vgg16(pretrained=True)
+    model.init_vgg16_params(vgg16)
 else:
     print("Unknown model name!!!!!!!!")
     
@@ -113,11 +129,12 @@ def cross_entropy2d(input, target, weight=None, size_average=True):
     return loss
 
 # optimier
-optimizer = SGD(model.parameters(), lr = 0.01)
+optimizer = SGD(model.parameters(), lr = 0.01, momentum=0.9)
 
 # Setup Metrics
 running_metrics_val = runningScore(n_classes)
 val_loss_meter = averageMeter()
+
 
 num_epochs = 30
 step = 0
@@ -147,7 +164,7 @@ while epoch <= num_epochs:
         
         # print(images.shape, labels.shape)
         # torch.Size([2, 3, 512, 1024]) torch.Size([2, 512, 1024])
-        if step%50 == 0:
+        if step%5==0:
             print(step)
         
         if step%save_every_n_steps == 0:
@@ -186,15 +203,18 @@ while epoch <= num_epochs:
             folder = 'saved_models/' + model_name +'psp'
             
             
-            
-            
             if not os.path.exists("saved_models"):
                 os.makedirs("saved_models") 
                 
             
-            
             if not os.path.exists(folder):
                 os.makedirs(folder) 
+                
+            
+            with open(os.path.join(folder, 'losses_epoch_{}_steps_{}_{}.pkl'.format(epoch, step, datetime.datetime.now().strftime("%b_%d_%H:%M:%S"))), 'wb') as handle:
+                pickle.dump(score_list, handle)
+            running_metrics_val.reset()
+            val_loss_meter.reset()
             
             with open(os.path.join(folder, 'losses_epoch_{}_steps_{}_{}.pkl'.format(epoch, step, datetime.datetime.now().strftime("%b_%d_%H:%M:%S"))), 'wb') as handle:
                 pickle.dump(score_list, handle)
