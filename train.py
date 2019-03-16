@@ -88,7 +88,7 @@ elif model_name == "SegWithSkipNet":
     vgg16 = models.vgg16(pretrained=True)
     model.init_vgg16_params(vgg16)    
 elif model_name == "SegWithSkipPSPNet":
-    model = DenseSegWithSkipNet(num_classes=n_classes)
+    model = DenseSegWithSkipPSPNet(num_classes=n_classes)
     vgg16 = models.vgg16(pretrained=True)
     model.init_vgg16_params(vgg16) 
 elif model_name == "SegNet_Dilation":
