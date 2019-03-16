@@ -1,8 +1,12 @@
 import time
 import os
 import datetime
+import pickle
 
 from models.segnet import DenseSegNet
+from models.segwithskipnet import DenseSegWithSkipNet
+from models.segnet_dilated import DenseSegNetDilation
+from models.segnet_all_dilated import DenseSegNetAllDilation
 from augmentations import get_composed_augmentations
 from loader.cityscapes import CityscapesLoader
 from metrics import runningScore, averageMeter
@@ -14,16 +18,19 @@ import torchvision.models as models
 from torch.optim import SGD
 
 #constants
-start_step = 3900
+start_step = 3750
 start_epoch = 11
-load_model_file = "net_epoch_11_steps_3900_loss_<IDK what to add here>_Mar_09_14:43:46.t7"
+load_model_file = "net_epoch_11_steps_3750_loss_<IDK what to add here>_Mar_14_05:27:23.t7"
 
 data_path = "/datasets/cityscapes"
 image_size = (256, 512)
 batch_size = 8
-model_name = "Default_SegNet"
-save_every_n_steps = 200
+# model_name = "Default_SegNet"
+model_name = "SegNet_Dilation"
+# model_name = "SegNet_All_Dilation"
+save_every_n_steps = 50
 use_n_batches_for_val_loss = 60
+# model_name = "SegWithSkipNet"
 
 num_epochs = 30
 
@@ -73,6 +80,20 @@ if model_name == "Default_SegNet":
     model = DenseSegNet(num_classes=n_classes)
     vgg16 = models.vgg16(pretrained=True)
     model.init_vgg16_params(vgg16)
+elif model_name == "SegWithSkipNet":
+    model = DenseSegWithSkipNet(num_classes=n_classes)
+    vgg16 = models.vgg16(pretrained=True)
+    model.init_vgg16_params(vgg16)    
+elif model_name == "SegNet_Dilation":
+    print("using some dilated conv segnet")
+    model = DenseSegNetDilation(num_classes=n_classes)
+    vgg16 = models.vgg16(pretrained=True)
+    model.init_vgg16_params(vgg16) 
+elif model_name == "SegNet_All_Dilation":
+    print("using all dilated conv segnet")
+    model = DenseSegNetAllDilation(num_classes=n_classes)
+    vgg16 = models.vgg16(pretrained=True)
+    model.init_vgg16_params(vgg16)    
 else:
     print("Unknown model name!!!!!!!!")
     
@@ -101,18 +122,21 @@ def cross_entropy2d(input, target, weight=None, size_average=True):
     return loss
 
 # optimier
-optimizer = SGD(model.parameters(), lr = 0.1, momentum=0.9)
+optimizer = SGD(model.parameters(), lr = 0.01, momentum=0.9)
 
 # Setup Metrics
 running_metrics_val = runningScore(n_classes)
 val_loss_meter = averageMeter()
 
+
+num_epochs = 30
 step = 0
 epoch = 0
 if load_model_file is not None:
     step = start_step
     epoch = start_epoch
 
+score_list = []
 while epoch <= num_epochs:
     epoch += 1
     print("Starting epoch %s" % epoch)
@@ -156,8 +180,8 @@ while epoch <= num_epochs:
                         break
 
             print("Iter %d Loss: %.4f" % (step, val_loss_meter.avg))
-            val_loss_meter.reset()
-
+            
+            
             score, class_iou = running_metrics_val.get_scores()
             for k, v in score.items():
                 print("kv: ", k, v)
@@ -168,16 +192,22 @@ while epoch <= num_epochs:
                 print("ikv: ", k, v)
         #         logger.info("{}: {}".format(k, v))
         #         writer.add_scalar("val_metrics/cls_{}".format(k), v, i + 1)
-            running_metrics_val.reset()
+            score_list.append([epoch, step, val_loss_meter.avg, score, class_iou])
+            folder = 'saved_models/' + model_name
             
             
             if not os.path.exists("saved_models"):
                 os.makedirs("saved_models") 
                 
-            folder = 'saved_models/' + model_name
             
             if not os.path.exists(folder):
                 os.makedirs(folder) 
+                
+            
+            with open(os.path.join(folder, 'losses_epoch_{}_steps_{}_{}.pkl'.format(epoch, step, datetime.datetime.now().strftime("%b_%d_%H:%M:%S"))), 'wb') as handle:
+                pickle.dump(score_list, handle)
+            running_metrics_val.reset()
+            val_loss_meter.reset()
             
             torch.save(model.state_dict(), os.path.join(folder, 'net_epoch_{}_steps_{}_loss_{}_{}.t7'.format(epoch, step, "<IDK what to add here>", datetime.datetime.now().strftime("%b_%d_%H:%M:%S"))))
             
