@@ -179,7 +179,7 @@ class DenseSegWithSkipPSPNet(nn.Module):
 
         self.drop_2 = nn.Dropout2d(p=0.15)
         self.final = nn.Sequential(
-            nn.Conv2d(64, n_classes, kernel_size=1),
+            nn.Conv2d(64, num_classes, kernel_size=1),
             nn.LogSoftmax()
         )
 
