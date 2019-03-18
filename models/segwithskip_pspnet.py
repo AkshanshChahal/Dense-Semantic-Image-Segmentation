@@ -172,15 +172,17 @@ class DenseSegWithSkipPSPNet(nn.Module):
         self.psp = PSPModule(psp_size, 512, sizes)
         self.drop_1 = nn.Dropout2d(p=0.3)
 
-        self.up_1 = PSPUpsample(512, 256)
+        self.up_1 = PSPUpsample(512, 512)
         #self.up_1 = PSPUpsample(1024, 256)
-        self.up_2 = PSPUpsample(256, 64)
-        self.up_3 = PSPUpsample(64, 64)
+        self.up_2 = PSPUpsample(512, 256)
+        self.up_3 = PSPUpsample(256, 128)
+        self.up_4 = PSPUpsample(128, 64)
+        self.up_5 = PSPUpsample(64, 32)
 
         self.drop_2 = nn.Dropout2d(p=0.15)
         self.final = nn.Sequential(
-            nn.Conv2d(64, num_classes, kernel_size=1),
-            nn.LogSoftmax()
+            nn.Conv2d(32, num_classes, kernel_size=1),
+            #nn.LogSoftmax()
         )
 
         # self.up5 = segnetUp3(512, 512)
