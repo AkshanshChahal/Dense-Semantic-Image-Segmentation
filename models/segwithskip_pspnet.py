@@ -216,6 +216,13 @@ class DenseSegWithSkipPSPNet(nn.Module):
 
         p = self.up_3(p)
         p = self.drop_2(p)
+
+        p = self.up_4(p)
+        p = self.drop_2(p)
+
+        p = self.up_5(p)
+        p = self.drop_2(p)
+        
         p = self.final(p)
         return p
 
