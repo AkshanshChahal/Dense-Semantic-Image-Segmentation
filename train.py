@@ -179,7 +179,7 @@ while epoch <= num_epochs:
 
                     pred = outputs.data.max(1)[1].cpu().numpy()
                     gt = labels_val.data.cpu().numpy()
-
+                    print ("shapes", gt.shape, pred.shape)
                     running_metrics_val.update(gt, pred)
                     val_loss_meter.update(val_loss.item())
                     print("val step done")
