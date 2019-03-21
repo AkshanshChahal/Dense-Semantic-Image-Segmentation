@@ -26,14 +26,14 @@ start_epoch = 0
 load_model_file = None
 
 data_path = "/datasets/cityscapes"
-image_size = (1024, 2048)
-batch_size = 1
+image_size = (256, 512)
+batch_size = 8
 
 # model_name = "Default_SegNet"
 model_name = "SegWithSkipPSPNet"
 # model_name = "SegNet_All_Dilation"
-save_every_n_steps = 400
-use_n_batches_for_val_loss = 500
+save_every_n_steps = 50
+use_n_batches_for_val_loss = 62
 # model_name = "SegWithSkipNet"
 
 num_epochs = 30
