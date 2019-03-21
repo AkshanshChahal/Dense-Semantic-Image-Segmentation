@@ -17,22 +17,23 @@ import torch.nn.functional as F
 from torch.utils import data
 import torchvision.models as models
 from torch.optim import SGD
+from torch.optim import Adam
 
 #constants
-start_step = 3750
-start_epoch = 11
-#load_model_file = "net_epoch_11_steps_4050_loss_<IDK what to add here>_Mar_09_22:50:27.t7"
+start_step = 0
+start_epoch = 0
+#load_model_file = "net_epoch_17_steps_5950_loss_<IDK what to add here>_Mar_17_23:44:41.t7"
 load_model_file = None
 
 data_path = "/datasets/cityscapes"
-image_size = (256, 512)
-batch_size = 8
+image_size = (1024, 2048)
+batch_size = 1
 
 # model_name = "Default_SegNet"
 model_name = "SegWithSkipPSPNet"
 # model_name = "SegNet_All_Dilation"
-save_every_n_steps = 50
-use_n_batches_for_val_loss = 60
+save_every_n_steps = 400
+use_n_batches_for_val_loss = 500
 # model_name = "SegWithSkipNet"
 
 num_epochs = 30
@@ -107,7 +108,7 @@ else:
 if load_model_file is not None:
     print("Loading specified model params")
     print("Set file name cosntant to None if you do not want to load model")
-    folder = 'saved_models/' + model_name + "/"
+    folder = 'saved_models/' + model_name + "pspadam" + "/"
     model.load_state_dict(torch.load(folder + load_model_file))
     
 model = model.to(device)
@@ -130,6 +131,7 @@ def cross_entropy2d(input, target, weight=None, size_average=True):
 
 # optimier
 optimizer = SGD(model.parameters(), lr = 0.01, momentum=0.9)
+#optimizer = Adam(model.parameters(), lr = 0.01)
 
 # Setup Metrics
 running_metrics_val = runningScore(n_classes)
@@ -200,7 +202,7 @@ while epoch <= num_epochs:
         #         logger.info("{}: {}".format(k, v))
         #         writer.add_scalar("val_metrics/cls_{}".format(k), v, i + 1)
             score_list.append([epoch, step, val_loss_meter.avg, score, class_iou])
-            folder = 'saved_models/' + model_name +'psp'
+            folder = 'saved_models/' + model_name +'pspadam'
             
             
             if not os.path.exists("saved_models"):
